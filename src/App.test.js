@@ -77,6 +77,27 @@ function ByTestIdExampleComponent() {
   )
 }
 
+function MultipleElementQueryExampleComponent({products}) {
+  
+  return(
+    <ul>
+      {
+        products.map((product, index) => (
+          <li key={index}>{product}</li>
+        ))
+      }
+    </ul>
+  )
+}
+
+function TextMatchingExampleComponent({suffix}) {
+  return(
+    <div>
+      TextMatchingExampleText : {suffix}
+    </div>
+  )
+}
+
 // Queries
 // getBy, getAllBy => DOM içerisinde var olduğundan eminsek eğer get kullanırız çünkü hata(error) vermesini isteriz.
 // queryBy, queryAll => Eğer bir elementin DOM içerisinde olmadığını kontrol etmek istersek queryBy kullanırız. Herhangi bir hata mesajı vermez.
@@ -138,3 +159,21 @@ it("elementin data-testid'sine bakarak elemente erişmek", () => {
   render(<ByTestIdExampleComponent/>)
   expect(screen.getByTestId("exampleTestIdText")).toBeInTheDocument()
 })
+
+
+// Multiple Element Query Kullanımı : product içerisine kaç tane element verirsem o kadar "li" elementinin render olduğunu görmek istiyorum.
+
+it("multiple element kullanımı" , () => {
+  const products = ["product-1","product-2","product-3"]
+  render(<MultipleElementQueryExampleComponent products={products}/>)
+  expect(screen.getAllByRole("listitem")).toHaveLength(products.length)
+})
+
+// Text Matching Yöntemleri : Text içerisinde ne yazdığını bilmiyorsak tam olarak text'i match edemiyorsak 2.parametre içerisinde "exact:false" kullanabiliriz. Bu sayede birebir aynı metin işe match etme işlemini kapatmış oluruz.
+it("text matching yöntemleri", () => {
+  render(<TextMatchingExampleComponent suffix={"testSuffix"}/>)
+  expect(screen.getByText("Suffix", {
+    exact:false
+  })).toBeInTheDocument()
+})
+
