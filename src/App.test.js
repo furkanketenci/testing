@@ -1,5 +1,6 @@
 import { render, screen } from '@testing-library/react';
 import App from './App';
+import { useEffect, useState } from 'react';
 
 // test('renders learn react link', () => {
 //   render(<App />); // Arrange aşaması denilebilir.
@@ -98,6 +99,32 @@ function TextMatchingExampleComponent({suffix}) {
   )
 }
 
+function QueryByEmptyCaseExampleComponent({suffix}){
+  return(
+    <div>
+      {suffix && <p>{suffix}</p>}
+      {!suffix && <p>Suffix yok</p>}
+    </div>
+  )
+}
+
+function FindByExampleComponent() {
+  const [message, setMessage] = useState("Ahmet")
+
+  useEffect(() => {
+  setTimeout(() => {
+    setMessage("Ali")
+  }, [300])
+  }, [])
+  return(
+    <div>
+      <p>{message}</p>
+    </div>
+  )
+}
+
+
+
 // Queries
 // getBy, getAllBy => DOM içerisinde var olduğundan eminsek eğer get kullanırız çünkü hata(error) vermesini isteriz.
 // queryBy, queryAll => Eğer bir elementin DOM içerisinde olmadığını kontrol etmek istersek queryBy kullanırız. Herhangi bir hata mesajı vermez.
@@ -177,3 +204,18 @@ it("text matching yöntemleri", () => {
   })).toBeInTheDocument()
 })
 
+
+
+// queryBy ile ögenin olup olmadığını kontrol etmek için queryByText kullanırız ve bununla birlikte "not" kullanırız.
+it("elementin var olup olmadığını kontrol etmeliyiz", () => {
+  render(<QueryByEmptyCaseExampleComponent/>)
+  expect(screen.queryByText("suffix yok")).not.toBeInTheDocument();
+})
+
+
+// findBy kullanımı : getBy ve queryBy kullanımından farklı asenkron çalışmasıdır. getBy ve queryBy DOM içerisinde ne görüyorsa onu dikkate alırken eğer bir değişiklik anını dikkate almak istiyorsak findBy kullanırız.
+
+it("element içerisinde isim değişikliği dikkate alınmalı", async () => {
+  render(<FindByExampleComponent/>)
+  expect(await screen.findByText("Ali")).toBeInTheDocument()
+})
