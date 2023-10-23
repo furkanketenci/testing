@@ -1,4 +1,5 @@
-import { render, screen } from '@testing-library/react';
+/* eslint-disable testing-library/no-node-access */
+import { render, screen, waitFor, waitForElementToBeRemoved } from '@testing-library/react';
 import App from './App';
 import { useEffect, useState } from 'react';
 
@@ -123,6 +124,30 @@ function FindByExampleComponent() {
   )
 }
 
+function WaitForExampleComponent() {
+  const [message, setMessage] = useState("Ahmet")
+
+  useEffect(() => {
+  setTimeout(() => {
+    setMessage("Ali")
+  }, [300])
+  }, [])
+
+  return(
+    <div>
+      <p>{message}</p>
+    </div>
+  )
+
+}
+
+function DomQuerySelectorExample() {
+ return(
+  <div className='dom-query'>
+  Testing
+</div>
+ )
+}
 
 
 // Queries
@@ -219,3 +244,59 @@ it("element içerisinde isim değişikliği dikkate alınmalı", async () => {
   render(<FindByExampleComponent/>)
   expect(await screen.findByText("Ali")).toBeInTheDocument()
 })
+
+
+// waitFor kullanımı : findBy ile aynı çalışma mantığı aynıdır. Herhangi bir noktada DOM update'i beklediğimizde ve o istediğimiz update "gerçekleşmediğinde" waitFor'u kullanmamız faydalı olabilir.
+// waitFor kullanırken bir elementin içerisindeki text'in var olup olmadığını kontrol ederken "getBy" kullanabiliriz. Normalde queryBy kullanırdık. Fark burada.
+
+it("element içerisinde isim değişikliğini gözlemleyecepiz", async () => {
+ render(<WaitForExampleComponent/>);
+ await waitFor(() => {
+  expect(screen.getByText("Ali")).toBeInTheDocument();
+ });
+ await waitFor(() => {
+  expect(screen.queryByText('Ahmet')).not.toBeInTheDocument();
+ });
+});
+
+
+// waitForElementToBeRemoved : Herhangi bir elementi kaldırdığımızdan emin olmak için kullanırız. async - await yapıya sahiptir.
+
+// Aşağıdaki örneğin açıklaması;
+// 1-  State içerisinde ilk önce yazan isim Ahmet idi. 500ms sonrasında Ahmet ismi Ali ile değiştirildi. 
+// 2- waitFor ile ekranda Ali ismi var mı yok mu diye kontrol ettik. Ekranda Ali olduğunu biliyoruz çünkü useEffect içerisinde bu işlemi yaptık.
+// 3- waitForElementToBeRemoved ise ekranda Ahmet ismi var mı diye bakıyor fakat yok. Çünkü isim Ali olarak çoktan değişti. DOM üzerinde elementin var olup olmadığından emin olmak için waitForElementToBeRemoved kullanırız.
+it("element kaldırıldı mı bunu kontrol edeceğiz" , async() => {
+  render(<WaitForExampleComponent/>)
+  // await waitFor(() => {
+  //   expect(screen.getByText("Ali")).toBeInTheDocument();
+  // })
+  await waitForElementToBeRemoved(() => screen.queryByText("Ahmet"));
+})
+
+
+// DOM Query Selector : Halihazırda var olan query'lerin hiçbirisi ile elemente erişemiyorsak kullanırız. (Tavsiye edilmez mecbur kalmadıkça kullanılmaz.)
+
+  it("classname seçip ulasacagız", () => {
+    const {container} = render(<DomQuerySelectorExample/>);
+  
+    // eslint-disable-next-line testing-library/no-container
+    const element = container.querySelector('.dom-query');
+
+    expect(element).toBeInTheDocument();
+    
+  })
+
+
+
+  // Debugging - DOM'u yazdırmak : Render ettiğimiz şey üzerinde başarılı bir test sağlayamıyorsak ve hata alıyorsak ne render ettiğimizi kontrol etmek isteyebiliriz.
+  // console.log ne ise test yazarken screen.debug() odur.
+
+  it("debugging yapıp render ettiğimiz html elementlerine erişmeyi hedefliyoruz", () => {
+    render(<DomQuerySelectorExample/>)
+    screen.debug();
+    expect(screen.getByText("Testing")).toBeInTheDocument()
+    screen.debug();
+  })
+
+  
